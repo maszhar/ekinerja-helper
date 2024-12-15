@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 const sourceDir = path.join(__dirname, 'external/view/build')
-const targetDir = path.join(__dirname, 'dist/external/view')
+const targetDir = path.join(__dirname, 'build/external/view')
 
 function copyFolder(src, target) {
     if (!fs.existsSync(target)) {

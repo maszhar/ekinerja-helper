@@ -1,25 +1,46 @@
 {
   "name": "ekinerja-helper",
   "version": "1.0.0",
-  "description": "",
-  "main": "dist/main.js",
+  "description": "EKinerja Helper",
+  "main": "build/main.js",
   "scripts": {
-    "clean": "rimraf dist",
+    "clean": "rimraf build",
     "build": "pnpm run clean && pnpm build:view && pnpm build:app && pnpm integrate:view",
     "build:view": "cd external/view && pnpm build",
     "build:app": "tsc",
     "integrate:view": "node integrate-view.js",
     "start": "pnpm run build && pnpm run open:app",
-    "open:app": "npx electron ."
+    "open:app": "npx electron .",
+    "pack": "electron-builder"
+  },
+  "build": {
+    "appId": "id.maszhar.ekinerja_helper",
+    "productName": "EKinerja Helper",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "mac": {
+      "target": "dmg"
+    }
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/electron": "^1.6.12",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.2"
   },

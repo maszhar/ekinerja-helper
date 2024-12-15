@@ -75,7 +75,7 @@ app.on('ready', () => {
     mainWindow.loadFile('loading.html')
 
     getAvailablePort().then((port) => {
-        const distPath = path.join(__dirname, '../dist/external/view')
+        const distPath = path.join(__dirname, './external/view')
 
         const expressApp = express()
         expressApp.use(express.static(distPath))
