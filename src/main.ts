@@ -33,16 +33,22 @@ import * as path from "path";
 
 let mainWindow: BrowserWindow | null = null;
 
-function loginEkinerja() {
-    mainWindow = new BrowserWindow({
+let loginEkinerjaWindow: BrowserWindow | null = null
+let loginEkinerjaWindowReader: NodeJS.Timeout | null = null
+
+function showLoginEkinerjaWindow() {
+    if (loginEkinerjaWindow) {
+        return
+    }
+    loginEkinerjaWindow = new BrowserWindow({
         width: 1024,
         height: 600,
     })
-    mainWindow.maximize()
-    mainWindow.loadURL("https://kinerja.bkn.go.id/login")
+    loginEkinerjaWindow.maximize()
+    loginEkinerjaWindow.loadURL("https://kinerja.bkn.go.id/login")
 
-    mainWindow.webContents.once('did-finish-load', () => {
-        setInterval(() => {
+    loginEkinerjaWindow.webContents.once('did-finish-load', () => {
+        loginEkinerjaWindowReader = setInterval(() => {
             mainWindow?.webContents.executeJavaScript('localStorage.getItem("token");')
                 .then((token) => {
                     console.log("Token:", token)
@@ -51,6 +57,14 @@ function loginEkinerja() {
                     console.error(e)
                 })
         }, 3000)
+    })
+
+    loginEkinerjaWindow.on('closed', () => {
+        if (loginEkinerjaWindowReader) {
+            clearInterval(loginEkinerjaWindowReader)
+            loginEkinerjaWindowReader = null
+        }
+        loginEkinerjaWindow = null;
     })
 }
 
@@ -79,6 +93,10 @@ app.on('ready', () => {
 
         const expressApp = express()
         expressApp.use(express.static(distPath))
+        expressApp.post("/api/login-ekinerja", async (req, res) => {
+            res.sendStatus(204)
+            showLoginEkinerjaWindow()
+        })
         expressApp.listen(port)
 
         mainWindow?.loadURL("http://localhost:" + port)
