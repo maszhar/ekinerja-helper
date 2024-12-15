@@ -1,0 +1,3 @@
+[submodule "external/view"]
+	path = external/view
+	url = https://github.com/maszhar/ekinerja-helper-view.git
