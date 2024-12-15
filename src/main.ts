@@ -48,44 +48,48 @@ function showLoginEkinerjaWindow() {
     loginEkinerjaWindow.loadURL("https://kinerja.bkn.go.id/login")
 
     loginEkinerjaWindow.webContents.once('did-finish-load', () => {
-        loginEkinerjaWindowReader = setInterval(() => {
-            const getTokens = async () => {
-                const accessToken = await loginEkinerjaWindow?.webContents.executeJavaScript('localStorage.getItem("token");')
-                if (!accessToken) {
-                    throw new Error("Access token is empty")
+        loginEkinerjaWindow?.webContents?.executeJavaScript('localStorage.clear()').then(() => {
+            loginEkinerjaWindowReader = setInterval(() => {
+                const getTokens = async () => {
+                    const accessToken = await loginEkinerjaWindow?.webContents.executeJavaScript('localStorage.getItem("token");')
+                    if (!accessToken) {
+                        throw new Error("Access token is empty")
+                    }
+
+                    const cookies = await loginEkinerjaWindow?.webContents.session.cookies.get({})
+
+                    const cookieAuth = cookies?.find(cookie => cookie.name == "a6efbb1502f502ec9fc2904a7a5a7b78")?.value
+                    if (!cookieAuth) {
+                        throw new Error("Cookie auth is empty")
+                    }
+
+                    const sessionAuth = cookies?.find(cookie => cookie.name == "__Host-kinerja_production_session")?.value
+                    if (!sessionAuth) {
+                        throw new Error("Session auth is empty")
+                    }
+
+                    const xsrfToken = cookies?.find(cookie => cookie.name == "XSRF-TOKEN")?.value
+                    if (!xsrfToken) {
+                        throw new Error("XSRF Token is empty")
+                    }
+
+                    return {
+                        accessToken,
+                        cookieAuth,
+                        sessionAuth,
+                        xsrfToken
+                    }
                 }
 
-                const cookies = await loginEkinerjaWindow?.webContents.session.cookies.get({})
+                getTokens().then((tokens) => {
+                    mainWindow?.webContents?.executeJavaScript(`verifyEkinerjaTokens(JSON.parse('${JSON.stringify(tokens)}'))`)
 
-                const cookieAuth = cookies?.find(cookie => cookie.name == "a6efbb1502f502ec9fc2904a7a5a7b78")?.value
-                if (!cookieAuth) {
-                    throw new Error("Cookie auth is empty")
-                }
-
-                const sessionAuth = cookies?.find(cookie => cookie.name == "__Host-kinerja_production_session")?.value
-                if (!sessionAuth) {
-                    throw new Error("Session auth is empty")
-                }
-
-                const xsrfToken = cookies?.find(cookie => cookie.name == "XSRF-TOKEN")?.value
-                if (!xsrfToken) {
-                    throw new Error("XSRF Token is empty")
-                }
-
-                return {
-                    accessToken,
-                    cookieAuth,
-                    sessionAuth,
-                    xsrfToken
-                }
-            }
-
-            getTokens().then((tokens) => {
-                mainWindow?.webContents?.executeJavaScript(`verifyEkinerjaTokens(JSON.parse('${JSON.stringify(tokens)}'))`)
-
-                loginEkinerjaWindow?.close()
-            }).catch(() => { })
-        }, 3000)
+                    loginEkinerjaWindow?.close()
+                }).catch(() => { })
+            }, 3000)
+        }).catch((e) => {
+            console.error(e)
+        })
     })
 
     loginEkinerjaWindow.on('closed', () => {
