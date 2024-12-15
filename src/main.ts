@@ -27,6 +27,9 @@
  */
 
 import { app, BrowserWindow } from "electron";
+import * as net from "net"
+import express from "express";
+import * as path from "path";
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -51,14 +54,37 @@ function loginEkinerja() {
     })
 }
 
+async function getAvailablePort(): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.unref();
+        server.on('error', reject)
+        server.listen(0, () => {
+            const port = (server.address() as net.AddressInfo).port;
+            server.close(() => resolve(port))
+        })
+    })
+}
+
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 600,
     })
     mainWindow.maximize()
+    mainWindow.loadFile('loading.html')
 
-    mainWindow.loadFile('dist/external/view/index.html')
+    getAvailablePort().then((port) => {
+        const distPath = path.join(__dirname, '../dist/external/view')
+
+        const expressApp = express()
+        expressApp.use(express.static(distPath))
+        expressApp.listen(port)
+
+        mainWindow?.loadURL("http://localhost:" + port)
+    }).catch(() => {
+        mainWindow?.close();
+    })
 })
 
 app.on('window-all-closed', () => {

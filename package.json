@@ -17,9 +17,13 @@
   "license": "ISC",
   "devDependencies": {
     "@types/electron": "^1.6.12",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "electron": "^33.2.1",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
   }
 }
