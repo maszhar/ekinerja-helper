@@ -49,13 +49,33 @@ function showLoginEkinerjaWindow() {
 
     loginEkinerjaWindow.webContents.once('did-finish-load', () => {
         loginEkinerjaWindowReader = setInterval(() => {
-            mainWindow?.webContents.executeJavaScript('localStorage.getItem("token");')
-                .then((token) => {
-                    console.log("Token:", token)
-                })
-                .catch((e) => {
-                    console.error(e)
-                })
+            const getTokens = async () => {
+                const accessToken = await loginEkinerjaWindow?.webContents.executeJavaScript('localStorage.getItem("token");')
+                if (!accessToken) {
+                    throw new Error("Access token is empty")
+                }
+
+                const cookies = await loginEkinerjaWindow?.webContents.session.cookies.get({})
+
+                const cookieAuth = cookies?.find(cookie => cookie.name == "a6efbb1502f502ec9fc2904a7a5a7b78")?.value
+                if (!cookieAuth) {
+                    throw new Error("Cookie auth is empty")
+                }
+
+                const sessionAuth = cookies?.find(cookie => cookie.name == "__Host-kinerja_production_session")?.value
+                if (!sessionAuth) {
+                    throw new Error("Session auth is empty")
+                }
+
+                const xsrfToken = cookies?.find(cookie => cookie.name == "XSRF-TOKEN")?.value
+                if (!xsrfToken) {
+                    throw new Error("XSRF Token is empty")
+                }
+            }
+
+            getTokens().then(() => {
+                loginEkinerjaWindow?.close()
+            }).catch(() => { })
         }, 3000)
     })
 
