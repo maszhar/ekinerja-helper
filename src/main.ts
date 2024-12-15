@@ -71,9 +71,18 @@ function showLoginEkinerjaWindow() {
                 if (!xsrfToken) {
                     throw new Error("XSRF Token is empty")
                 }
+
+                return {
+                    accessToken,
+                    cookieAuth,
+                    sessionAuth,
+                    xsrfToken
+                }
             }
 
-            getTokens().then(() => {
+            getTokens().then((tokens) => {
+                mainWindow?.webContents?.executeJavaScript(`verifyEkinerjaTokens(JSON.parse('${JSON.stringify(tokens)}'))`)
+
                 loginEkinerjaWindow?.close()
             }).catch(() => { })
         }, 3000)
@@ -104,6 +113,9 @@ app.on('ready', () => {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 600,
+        webPreferences: {
+            webSecurity: false
+        }
     })
     mainWindow.maximize()
     mainWindow.loadFile('loading.html')
