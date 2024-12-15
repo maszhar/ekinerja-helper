@@ -30,7 +30,7 @@ import { app, BrowserWindow } from "electron";
 
 let mainWindow: BrowserWindow | null = null;
 
-app.on('ready', () => {
+function loginEkinerja() {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 600,
@@ -49,6 +49,16 @@ app.on('ready', () => {
                 })
         }, 3000)
     })
+}
+
+app.on('ready', () => {
+    mainWindow = new BrowserWindow({
+        width: 1024,
+        height: 600,
+    })
+    mainWindow.maximize()
+
+    mainWindow.loadFile('dist/external/view/index.html')
 })
 
 app.on('window-all-closed', () => {
