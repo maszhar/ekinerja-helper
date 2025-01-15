@@ -124,16 +124,21 @@ ipcMain.handle('ekinerjaRequest', async (event, arg) => {
         const path = arg.path
         const baseUrl = "https://kinerja.bkn.go.id/api"
 
-        const response = await fetch(baseUrl + path, {
+        const requestOptions: RequestInit = {
             method: method,
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
                 "Cookie": cookie,
-                "Content-Type": "application/json",
                 "X-Xsrf-Token": xsrfToken
-            },
-            body: JSON.stringify(arg.data)
-        })
+            }
+        }
+
+        if (method !== 'DELETE') {
+            (requestOptions.headers as any)["Content-Type"] = "application/json";
+            requestOptions.body = JSON.stringify(arg.data);
+        }
+
+        const response = await fetch(baseUrl + path, requestOptions)
 
         console.log("Sukses")
         console.log(response.status)
