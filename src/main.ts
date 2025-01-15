@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import * as net from "net"
 import express from "express";
 import * as path from "path";
@@ -68,10 +68,11 @@ function showLoginEkinerjaWindow() {
                         throw new Error("Session auth is empty")
                     }
 
-                    const xsrfToken = cookies?.find(cookie => cookie.name == "XSRF-TOKEN")?.value
+                    let xsrfToken = cookies?.find(cookie => cookie.name == "XSRF-TOKEN")?.value
                     if (!xsrfToken) {
                         throw new Error("XSRF Token is empty")
                     }
+                    xsrfToken = decodeURIComponent(xsrfToken)
 
                     return {
                         accessToken,
@@ -113,11 +114,44 @@ async function getAvailablePort(): Promise<number> {
     })
 }
 
+ipcMain.handle('ekinerjaRequest', async (event, arg) => {
+    const requestId: number = arg.requestId
+    try {
+        const accessToken = arg.accessToken
+        const cookie = arg.cookie
+        const method: 'POST' | 'PUT' | 'DELETE' = arg.method
+        const xsrfToken = arg.xsrfToken
+        const path = arg.path
+        const baseUrl = "https://kinerja.bkn.go.id/api"
+
+        const response = await fetch(baseUrl + path, {
+            method: method,
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Cookie": cookie,
+                "Content-Type": "application/json",
+                "X-Xsrf-Token": xsrfToken
+            },
+            body: JSON.stringify(arg.data)
+        })
+
+        console.log("Sukses")
+        console.log(response.status)
+
+        mainWindow?.webContents?.executeJavaScript(`ekinerjaResponse(${requestId}, {status: ${response.status}, data: '${await response.text()}'})`)
+    } catch (e: any) {
+        console.error("Gagal")
+        console.error(e)
+        mainWindow?.webContents?.executeJavaScript(`ekinerjaResponseError(${requestId}, "Error"`)
+    }
+})
+
 app.on('ready', () => {
     mainWindow = new BrowserWindow({
         width: 1024,
         height: 600,
         webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
             webSecurity: false
         }
     })

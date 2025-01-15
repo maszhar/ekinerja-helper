@@ -5,7 +5,7 @@
   "main": "build/main.js",
   "scripts": {
     "clean": "rimraf build",
-    "build": "pnpm run clean && pnpm build:view && pnpm build:app && pnpm integrate:view",
+    "build": "pnpm run clean && pnpm build:view && pnpm build:app && pnpm integrate:view && node copy-preload.js",
     "build:view": "cd external/view && pnpm build",
     "build:app": "tsc",
     "integrate:view": "node integrate-view.js",
